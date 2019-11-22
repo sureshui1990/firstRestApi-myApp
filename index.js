@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const app = express();
+const cors = require('cors');
 const postRoutes = require('./routes/post');
 const port = process.env.PORT || 4949;
 require('dotenv').config();
@@ -10,6 +11,7 @@ require('dotenv').config();
 // Middleware
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
+app.use(cors());
 app.use('/api', postRoutes);
 
 // Default routes
