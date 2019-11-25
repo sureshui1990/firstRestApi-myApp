@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const cors = require('cors');
 const postRoutes = require('./routes/post');
+const userRoutes = require('./routes/user');
 const port = process.env.PORT || 4949;
 require('dotenv').config();
 
@@ -12,7 +13,7 @@ require('dotenv').config();
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cors());
-app.use('/api', postRoutes);
+
 
 // Default routes
 app.get('/', (req,res) => {
@@ -23,6 +24,13 @@ app.get('/', (req,res) => {
 mongoose.connect(process.env.DB_BASE_URL, {useNewUrlParser: true,useUnifiedTopology: true},() => {
     console.log('connected to DB');
 })
+
+// Middleware
+app.use(express.json());
+
+// Routes Middleware
+app.use('/api/post', postRoutes);
+app.use('/api/user', userRoutes);
 
 // Listen the app with port
 app.listen(port, () => (console.log(`server running on ${port}`)));
