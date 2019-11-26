@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const User = require('../models/User');
+const Joi = require('@hapi/joi');
 
 // Get all user list
 router.get('/', async (req, res) => {
@@ -13,21 +14,30 @@ router.get('/', async (req, res) => {
 
 });
 
+const schema = {
+    name: Joi.string().min(6).required(),
+    email: Joi.string().min(6).required(),
+    password: Joi.string().min(6).required(),
+};
+
 //  Submit all user data
 router.post('/register', async (req, res) => {
+
+    const {error} = Joi.validate(req.body,schema);
+    res.send(error.details[0].message);
     
-    const { name, password, email } = req.body;
+    // const { name, password, email } = req.body;
 
-    const user = new User({
-        name, password, email
-    });
+    // const user = new User({
+    //     name, password, email
+    // });
 
-    try{
-        const savedUser = await user.save();
-        res.json(savedUser);
-    }catch(err){
-        res.status(400).json({message: err})
-    }
+    // try{
+    //     const savedUser = await user.save();
+    //     res.json(savedUser);
+    // }catch(err){
+    //     res.status(400).json({message: err})
+    // }
 
 });
 
@@ -43,12 +53,29 @@ router.get('/:userId', async (req, res) => {
     }
 
 });
+
+//  Update specific user data
+router.patch('/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const { name } = req.body;
+
+    try{
+        const updatedOne = await User.updateOne(
+           {_id: userId}, 
+           {$set: {name}}
+        );
+        res.json(updatedOne);
+    }catch(err){
+        res.status(400).json({message: err})
+    }
+
+});
 //  Delete specific user data
 router.delete('/:userId', async (req, res) => {
     const { userId } = req.params;
 
     try{
-        const removedUserList = await User.remove({_id:userId});
+        const removedUserList = await User.deleteOne({_id:userId});
         res.json(removedUserList);
     }catch(err){
         res.status(400).json({message: err})
