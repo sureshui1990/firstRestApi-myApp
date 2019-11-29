@@ -1,19 +1,10 @@
 const router = require('express').Router();
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const verifyToken = require('./verifyToken');
 const { registerValidation, loginValidation } = require('../validation');
 
-// Get all user list
-router.get('/', async (req, res) => {
-    
-    try{
-        const userList = await User.find({});
-        res.json(userList);
-    }catch(err){
-        res.status(400).json({message: err})
-    }
-
-});
 
 // Login
 router.get('/login', async (req, res) => {
@@ -31,23 +22,14 @@ router.get('/login', async (req, res) => {
     }
 
     const validPassword = await bcrypt.compare(password,user.password);
-
-    if(validPassword){
+    
+    if(!validPassword){
         return res.status(400).send('Invalid password');
     }
 
-    return res.send('Logged in succuessfully')
-
-    // try{
-    //     const userList = await User.find({});
-    //     res.json(userList);
-    // }catch(err){
-    //     res.status(400).json({message: err})
-    // }
-
+    const token = jwt.sign({_id: user.id}, process.env.TOKEN_SECRET);
+    res.header('auth-token',token).send(token);
 });
-
-
 
 //  Submit all user data
 router.post('/register', async (req, res) => {
@@ -84,8 +66,20 @@ router.post('/register', async (req, res) => {
 
 });
 
+// Get all user list
+router.get('/', verifyToken,  async (req, res) => {
+    
+    try{
+        const userList = await User.find({});
+        res.json(userList);
+    }catch(err){
+        res.status(400).json({message: err})
+    }
+
+});
+
 //  Get specific user data
-router.get('/:userId', async (req, res) => {
+router.get('/:userId', verifyToken, async (req, res) => {
     const { userId } = req.params;
 
     try{
@@ -98,16 +92,16 @@ router.get('/:userId', async (req, res) => {
 });
 
 //  Update specific user data
-router.patch('/:userId', async (req, res) => {
+router.patch('/:userId', verifyToken, async (req, res) => {
     const { userId } = req.params;
     const { name } = req.body;
 
     try{
-        const updatedOne = await User.updateOne(
+        const updatedUser = await User.updateOne(
            {_id: userId}, 
            {$set: {name}}
         );
-        res.json(updatedOne);
+        res.json(updatedUser);
     }catch(err){
         res.status(400).json({message: err})
     }
